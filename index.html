@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iyal — Handwriting, made intelligent</title>
+<meta name="description" content="Iyal captures handwritten work in real-time and generates structured assessment instantly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --white: #FFFFFF;
+    --ink: #14171C;
+    --ink-soft: #51565E;
+    --gray: #8A8F98;
+    --line: #ECECEC;
+    --orange: #E8542F;
+    --orange-deep: #C73E1D;
+    --navy: #14182A;
+    --display: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--white); color: var(--ink); font-family: var(--sans); line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(.2,.7,.3,1), transform 0.6s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  .stagger-child { opacity: 0; transform: translateY(18px); transition: opacity 0.55s cubic-bezier(.2,.7,.3,1), transform 0.55s cubic-bezier(.2,.7,.3,1); }
+  .stagger-child.in { opacity: 1; transform: translateY(0); }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .nav-mark { font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: -0.01em; }
+  .nav-mark .dot { color: var(--orange); }
+  .nav-links { display: flex; gap: 34px; font-size: 15px; font-weight: 500; color: var(--ink-soft); }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta { background: var(--ink); color: var(--white) !important; padding: 11px 22px; border-radius: 8px; font-size: 14.5px; font-weight: 600; transition: background 0.2s ease; }
+  .nav-cta:hover { background: var(--orange); }
+  @media (max-width: 760px) { .nav-links { display: none; } }
+
+  .hero { position: relative; padding: 168px 0 60px; text-align: center; overflow: hidden; }
+  .hero-glow { position: absolute; top: -200px; left: 50%; transform: translateX(-50%); width: 1100px; height: 700px; background: radial-gradient(ellipse at center, rgba(255,138,76,0.22) 0%, rgba(255,138,76,0.10) 35%, rgba(255,255,255,0) 70%); pointer-events: none; z-index: 0; }
+  .hero-inner { position: relative; z-index: 2; max-width: 880px; margin: 0 auto; }
+
+  .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--white); border: 1px solid var(--line); border-radius: 99px; padding: 9px 18px; font-size: 14px; font-weight: 500; color: var(--ink-soft); box-shadow: 0 4px 16px -8px rgba(20,23,28,0.1); margin-bottom: 32px; }
+  .pill .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
+
+  h1 { font-family: var(--display); font-weight: 800; font-size: clamp(42px, 6vw, 72px); line-height: 1.02; letter-spacing: -0.025em; color: var(--ink); margin-bottom: 24px; }
+  h1 .accent { color: var(--orange); }
+  .lede { font-size: 19px; color: var(--ink-soft); max-width: 560px; margin: 0 auto 38px; line-height: 1.55; }
+
+  .btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
+  .btn-primary { background: var(--ink); color: var(--white); padding: 15px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s ease, transform 0.15s ease; }
+  .btn-primary:hover { background: var(--orange); transform: translateY(-1px); }
+  .btn-secondary { border: 1px solid var(--line); background: var(--white); color: var(--ink); padding: 15px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; transition: border-color 0.2s ease; }
+  .btn-secondary:hover { border-color: var(--ink); }
+
+  .demo-card { position: relative; z-index: 2; background: var(--white); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 40px 90px -40px rgba(20,23,28,0.25); max-width: 920px; margin: 0 auto; overflow: hidden; }
+  .demo-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  .demo-tab { display: flex; gap: 6px; }
+  .demo-tab span { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .demo-label { font-size: 13px; color: var(--gray); font-weight: 500; }
+
+  .demo-body { padding: 40px 32px; min-height: 280px; position: relative; }
+  .demo-slide { display: none; align-items: center; gap: 40px; }
+  .demo-slide.active { display: flex; }
+  @media (max-width: 700px) { .demo-slide.active { flex-direction: column; } }
+  .demo-gif-slot { position: relative; flex: 1; aspect-ratio: 4/3; border-radius: 12px; border: 1.5px dashed #E0C4B6; background: #FFF9F6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .demo-gif-slot span { color: var(--gray); font-size: 12px; font-weight: 500; text-align: center; padding: 0 18px; line-height: 1.5; }
+  .demo-gif-slot .gs-static, .demo-gif-slot .gs-gif { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease; }
+  .demo-gif-slot .gs-static { opacity: 0; }
+  .demo-gif-slot .gs-gif { opacity: 1; }
+  .demo-gif-slot .gs-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .demo-gif-slot.has-media { border-style: solid; border-color: var(--line); }
+
+  .demo-question { flex: 1; text-align: left; }
+  .demo-question .qtag { font-size: 12.5px; font-weight: 600; color: var(--orange); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+  .demo-question .qtext { font-size: 16px; color: var(--ink); font-weight: 500; line-height: 1.5; }
+  .demo-writing { flex: 1; background: #FAFAFA; border-radius: 10px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 130px; }
+  .demo-writing svg { width: 100%; height: 90px; }
+  .demo-writing path { fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .hw-text { font-family: 'Caveat', cursive; font-size: 46px; font-weight: 600; color: var(--ink); }
+  .hw-text.hw-small { font-size: 34px; }
+
+  .demo-result { flex: 1; text-align: left; }
+  .demo-result .rrow { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; border-top: 1px solid var(--line); }
+  .demo-result .rrow:first-child { border-top: none; }
+  .demo-result .ok { color: #1F8A4C; font-weight: 700; margin-right: 8px; }
+  .demo-result .bad { color: var(--orange-deep); font-weight: 700; margin-right: 8px; }
+  .demo-result .score { font-weight: 700; color: var(--ink); }
+
+  .demo-dots { display: flex; gap: 7px; justify-content: center; padding: 18px 0 26px; }
+  .demo-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: background 0.25s ease, transform 0.25s ease; cursor: pointer; }
+  .demo-dots span.active { background: var(--orange); transform: scale(1.3); }
+
+  .stat-strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #FBFBFB; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 1180px; margin: 0 auto; }
+  @media (max-width: 760px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-cell { padding: 40px 28px; text-align: center; border-right: 1px solid var(--line); }
+  .stat-cell:last-child { border-right: none; }
+  @media (max-width: 760px) { .stat-cell:nth-child(2n) { border-right: none; } .stat-cell { border-bottom: 1px solid var(--line); } }
+  .stat-cell .num { font-family: var(--display); font-weight: 800; font-size: 38px; color: var(--orange); line-height: 1; margin-bottom: 8px; }
+  .stat-cell .lbl { font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
+
+  section { position: relative; padding: 100px 0; }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--orange); margin-bottom: 16px; }
+  h2 { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 4vw, 46px); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 18px; max-width: 680px; }
+  .sub { color: var(--ink-soft); font-size: 16.5px; max-width: 600px; line-height: 1.6; }
+  .center { text-align: center; margin-left: auto; margin-right: auto; }
+
+  .how-layout { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 64px; align-items: start; margin-top: 56px; }
+  @media (max-width: 680px) {
+    /* ── Demo card ── */
+    .how-layout { grid-template-columns: 1fr; }
+    .demo-gif-slot { min-height: 180px; } /* aspect-ratio fallback for old iOS */
+    .demo-slide { flex-direction: column; gap: 16px; }
+
+    /* ── Exam paradigm: show visual FIRST, then steps ── */
+    .how-layout { display: flex; flex-direction: column; }
+    .how-visual {
+      position: relative !important;
+      top: auto !important;
+      order: 1;
+      min-height: auto;
+      padding: 20px;
+      margin-top: 8px;
+      display: none !important; /* hidden — images inserted per-step by JS below */
+    }
+    .how-steps { order: 0; }
+    .how-step {
+      min-height: auto !important;  /* remove 62vh — was causing 3-screen scroll */
+      padding: 28px 20px;
+    }
+
+    /* ── Hide gifs on mobile: base64 gifs unreliable on iOS Safari ── */
+    .gs-gif,
+    .hv-gif-slot .gs-gif { display: none !important; }
+    .gs-static,
+    .hv-gif-slot .gs-static { opacity: 1 !important; }
+    .hv-gif-slot.tapped .gs-gif { display: block !important; }
+    .hv-gif-slot::after { display: none !important; }
+
+    /* ── Ensure demo card Step 1 image always shows ── */
+    .gs-image { display: block; opacity: 1; }
+
+    /* ── How-it-works: frame 0 always active on mobile ── */
+    .hv-frame { display: none; }
+    .hv-frame[data-frame="0"] { display: block; }
+  }
+  .how-steps { display: flex; flex-direction: column; gap: 0; }
+  .how-step { padding: 64px 28px; min-height: 62vh; display: flex; flex-direction: column; justify-content: center; border-radius: 14px; border: 1px solid transparent; transition: background 0.35s ease, border-color 0.35s ease; }
+  .how-step.active { background: #FFF6F2; border-color: #FFE0D2; }
+  .how-step .stitle { font-family: var(--display); font-weight: 700; font-size: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+  .how-step .sidx { width: 30px; height: 30px; border-radius: 50%; background: var(--line); color: var(--ink-soft); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; transition: background 0.3s ease, color 0.3s ease; }
+  .how-step.active .sidx { background: var(--orange); color: white; }
+  .how-step p { font-size: 15px; color: var(--ink-soft); padding-left: 42px; max-width: 420px; line-height: 1.6; }
+
+  .how-visual { position: sticky; top: 110px; background: var(--navy); border-radius: 18px; padding: 36px; min-height: 460px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .hv-frame { display: none; width: 100%; text-align: center; }
+  .hv-frame.active { display: block; animation: fadeScale 0.5s ease; }
+  @keyframes fadeScale { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  .hv-gif-slot { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px; border: 1.5px dashed rgba(255,255,255,0.22); background: #0d1020; display: flex; align-items: center; justify-content: center; margin-bottom: 22px; overflow: hidden; }
+  .hv-gif-slot span { color: rgba(255,255,255,0.4); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; padding: 0 20px; text-align: center; }
+  .hv-gif-slot .gs-static, .hv-gif-slot .gs-gif { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.3s ease; }
+  .hv-gif-slot .gs-static { opacity: 1; }
+  .hv-gif-slot .gs-gif { opacity: 0; }
+  .hv-gif-slot:hover .gs-gif { opacity: 1; }
+  .hv-gif-slot:hover .gs-static { opacity: 0; }
+  .hv-gif-slot.has-media { border-style: solid; border-color: rgba(255,255,255,0.18); }
+  .hv-icon { width: 64px; height: 64px; border-radius: 16px; background: rgba(255,138,76,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 28px; }
+  .hv-frame h4 { font-family: var(--display); color: white; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  .hv-frame p { color: rgba(255,255,255,0.65); font-size: 14.5px; max-width: 320px; margin: 0 auto; }
+
+  .use-grid { margin-top: 52px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 760px) { .use-grid { grid-template-columns: 1fr; } }
+  .use-card { border: 1px solid var(--line); border-radius: 16px; padding: 32px 28px; transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  .use-card:hover { transform: translateY(-4px); box-shadow: 0 24px 50px -28px rgba(20,23,28,0.18); }
+  .use-icon { width: 44px; height: 44px; border-radius: 12px; background: #FFF6F2; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-family: var(--display); color: var(--orange); font-weight: 800; font-size: 17px; }
+  .use-card h3 { font-family: var(--display); font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+  .use-card p { font-size: 14.5px; color: var(--ink-soft); line-height: 1.55; }
+
+  /* --- Thesis / branching mind-map section --- */
+  .thesis-section { background: var(--navy); color: white; overflow: hidden; padding: 120px 0 110px; }
+  .thesis-eyebrow { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--orange); margin-bottom: 22px; }
+  .thesis-eyebrow .sq { width: 9px; height: 9px; background: var(--orange); display: inline-block; }
+  .thesis-title { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 4vw, 44px); line-height: 1.18; text-align: center; max-width: 760px; margin: 0 auto 100px; letter-spacing: -0.01em; }
+
+  .thesis-diagram { position: relative; max-width: 1180px; height: clamp(1000px, 88vw, 1220px); margin: 0 auto; }
+  .thesis-lines-svg { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+  .thesis-lines-svg line { stroke: rgba(255,255,255,0.28); stroke-width: 1.3; }
+  .thesis-lines-svg line.drawn { stroke-dasharray: 600; stroke-dashoffset: 600; animation: dashIn 1.1s ease forwards; }
+  @keyframes dashIn { to { stroke-dashoffset: 0; } }
+
+  .thesis-hub { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: clamp(160px, 18vw, 230px); height: clamp(160px, 18vw, 230px); z-index: 3; }
+  .thesis-hub svg { width: 100%; height: 100%; }
+  .thesis-hub svg polygon, .thesis-hub svg line { stroke: rgba(255,255,255,0.4); stroke-width: 1; fill: none; }
+  .thesis-hub-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 72%; text-align: center; font-family: var(--display); font-size: clamp(14px, 1.6vw, 18px); font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; text-transform: none; color: var(--orange); z-index: 5; }
+
+  .thesis-node { position: absolute; width: 27%; min-width: 240px; z-index: 2; }
+  .thesis-node.tl { top: 2%;  left: 0%; }
+  .thesis-node.tr { top: 2%;  right: 0%; }
+  .thesis-node.bl { bottom: 2%; left: 5%; }
+  .thesis-node.br { bottom: 2%; right: 5%; }
+
+  .thesis-text { text-align: center; }
+  .thesis-tag { display: block; width: fit-content; margin: -14px auto 12px auto; background: white; color: var(--navy); font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; padding: 5px 10px; border-radius: 4px; position: relative; z-index: 4; }
+
+  .thesis-img-slot { position: relative; width: 300px; height: 300px; max-width: 100%; margin: 0 auto 18px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.22); background: #1B2036; overflow: hidden; }
+  .thesis-img-slot .ti-static { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .thesis-img-slot .ti-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .thesis-img-slot .ti-placeholder span { color: rgba(255,255,255,0.4); font-size: 9.5px; font-weight: 500; text-align: center; padding: 0 8px; line-height: 1.4; }
+
+  .thesis-node h4 { font-family: var(--display); font-size: clamp(13.5px, 1.4vw, 16.5px); font-weight: 700; margin-bottom: 12px; color: white; text-align: center; }
+  .thesis-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .thesis-pill { font-size: 6px; font-weight: 600; color: #FF8A6B; background: rgba(255,122,69,0.14); border: 1px solid rgba(255,122,69,0.28); padding: 3px 6px; border-radius: 5px; letter-spacing: 0.01em; }
+
+  @media (max-width: 680px) {
+    .thesis-diagram { height: auto; }
+    .thesis-lines-svg, .thesis-hub { display: none; }
+    .thesis-node { position: static; width: 100%; max-width: none; min-width: 0; margin-bottom: 40px; }
+    .thesis-node-grid { display: block; }
+    .thesis-tag { margin-left: 0; }
+  }
+
+  .cta-section { background: var(--navy); color: white; text-align: center; overflow: hidden; position: relative; }
+  .cta-glow { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 900px; height: 500px; background: radial-gradient(ellipse at center, rgba(255,122,69,0.28) 0%, rgba(255,122,69,0) 65%); pointer-events: none; }
+  .cta-inner { position: relative; z-index: 2; max-width: 760px; margin: 0 auto; }
+  .cta-section h2 { color: white; margin: 0 auto 18px; }
+  .cta-section .sub { color: rgba(255,255,255,0.65); margin: 0 auto 16px; }
+
+  .contact-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 44px; margin-top: 36px; }
+  .btn-light { background: white; color: var(--navy); padding: 15px 30px; border-radius: 8px; font-size: 15px; font-weight: 700; transition: background 0.2s ease, color 0.2s ease; }
+  .btn-light:hover { background: var(--orange); color: white; }
+  .btn-outline { border: 1px solid rgba(255,255,255,0.25); color: white; padding: 15px 30px; border-radius: 8px; font-size: 15px; font-weight: 600; transition: border-color 0.2s ease; }
+  .btn-outline:hover { border-color: white; }
+
+  .addr-block { border-top: 1px solid rgba(255,255,255,0.14); padding-top: 32px; display: flex; justify-content: center; gap: 56px; flex-wrap: wrap; text-align: left; }
+  .addr-item .addr-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
+  .addr-item .addr-text { font-size: 14.5px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+
+  footer { padding: 28px 0; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--gray); }
+  @media (max-width: 600px) { footer .wrap { flex-direction: column; gap: 8px; text-align: center; } }
+  /* ── Iyal Kuri section ── */
+  .kuri-section { background: var(--cream); border-top: 1px solid var(--line); padding: 100px 0 110px; }
+  .kuri-section > .wrap { display: flex; flex-direction: column; align-items: center; }
+  .kuri-beta { display: inline-flex; align-items: center; gap: 8px; background: #FFF0EB; border: 1px solid #FFD0B8; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--orange); margin-bottom: 18px; }
+  .kuri-beta .dot-live { background: var(--orange); }
+  .kuri-sub2 { font-size: 14px; font-weight: 600; color: var(--orange); margin-top: 18px; display: flex; align-items: center; gap: 8px; }
+  .kuri-sub2::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
+
+  .kuri-demo-card { background: white; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; margin-top: 52px; width: 100%; max-width: 860px; box-shadow: 0 12px 40px -16px rgba(20,23,28,0.12); }
+  .kuri-demo-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .kuri-demo-tab span { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+  .kuri-demo-tab { display: flex; gap: 6px; }
+  .kuri-nav-arrows { display: flex; gap: 8px; }
+  .kuri-arrow { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ink-soft); transition: background 0.2s, color 0.2s; user-select: none; }
+  .kuri-arrow:hover { background: var(--cream); color: var(--ink); }
+
+  .kuri-slide { display: none; flex-direction: column; align-items: stretch; }
+  .kuri-slide.active { display: flex; animation: fadeScale 0.45s ease; }
+  .kuri-slide-title { font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--ink); text-align: center; padding: 28px 40px 20px; }
+  .kuri-gif-wrap { width: 100%; overflow: hidden; background: #0d1020; }
+  .kuri-gif-wrap img { width: 100%; display: block; }
+
+  .kuri-dots { display: flex; justify-content: center; gap: 10px; padding: 20px 0 28px; }
+  .kuri-dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--line); cursor: pointer; transition: background 0.25s; }
+  .kuri-dots span.active { background: var(--orange); }
+  /* ── Touch device: tap support for thesis section gifs ── */
+  @media (hover: none) {
+    .thesis-img-slot .ti-gif { display: none; }
+    .thesis-img-slot .ti-static { opacity: 1; }
+  }
+  @media (max-width: 680px) {
+  }
+  @media (max-width: 680px) {
+    .mob-step-img { display: block !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-mark">Iyal<span class="dot">.</span></div>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#exam-paradigm">Examination paradigm</a>
+      <a href="#kuri">Kuri</a>
+      <a href="#use-cases">Use cases</a>
+    </div>
+    <a class="nav-cta" href="#contact">Get in touch</a>
+  </div>
+</nav>
+
+<header class="hero" id="how-it-works">
+  <div class="hero-glow"></div>
+  <div class="wrap hero-inner">
+    <div class="pill"><span class="dot-live"></span> Intelligent natural writing technology</div>
+    <h1>Handwriting,<br>made <span class="accent">intelligent</span>.</h1>
+    <p class="lede">Iyal uses intelligent natural writing technology to save educators 8–10 hours a week spent on manual assessment.</p>
+    <div class="btn-row">
+      <a class="btn-primary" href="#exam-paradigm">See it in an exam →</a>
+      <a class="btn-secondary" href="#contact">Request a pilot</a>
+    </div>
+    <div class="eyebrow center" style="margin-top:8px;">How it works</div>
+    <h2 class="center" style="margin:0 auto 14px;">Built around how people already write.</h2>
+    <p class="sub center" style="margin:0 auto;">Intelligent natural writing technology captures real paper, a real pen, and real time — turning naturally written strokes into computable information.</p>
+  </div>
+
+  <div class="demo-card wrap" style="max-width:920px;">
+    <div class="demo-top" style="justify-content:flex-end;">
+      <div class="demo-tab"><span></span><span></span><span></span></div>
+    </div>
+    <div class="demo-body">
+
+      <div class="demo-slide active" data-slide="0">
+        <div class="demo-question" style="flex:0 0 160px;">
+          <div class="qtag">Step 1 — The question</div>
+          <div class="qtext" style="font-size:16px; color:var(--ink); font-weight:500; margin-top:10px;">An example assessment question given to a student.</div>
+        </div>
+        <div class="demo-gif-slot has-media" style="flex:1; aspect-ratio:16/9;" data-gif="live-demo-step-0">
+          <img class="gs-image" src="assets/scanned-question-find-the-roots-of-x-squ.png" alt="Scanned question: find the roots of x squared minus 5x plus 6 equals 0" style="object-fit:contain; background:#fff;">
+        </div>
+      </div>
+
+      <div class="demo-slide" data-slide="1">
+        <div class="demo-question">
+          <div class="qtag">Step 2 — Captured live</div>
+          <div class="qtext">Every stroke streamed as it's written — up to 100 times a second, no photograph needed.</div>
+        </div>
+        <div class="demo-gif-slot has-media" data-gif="live-demo-step-2"><img class="gs-static" src="assets/pen-rendering-live-next-to-physical-pape.png" alt="Pen rendering live next to physical paper"><img class="gs-gif" src="assets/live-rendering-and-physical-writing-anim.gif" alt="Live rendering and physical writing, animated"></div>
+      </div>
+
+      <div class="demo-slide" data-slide="2">
+        <div class="demo-question" style="flex:0.8;">
+          <div class="qtag">Step 3 — Marked instantly</div>
+          <div class="qtext">Checked against the answer key the moment the student finishes.</div>
+        </div>
+        <div class="demo-result">
+          <div class="rrow"><span><span class="ok">✓</span>Factorisation (x−3)(x−2)=0</span><span class="score">1.0/1.0</span></div>
+          <div class="rrow"><span><span class="ok">✓</span>Root x = 2 stated</span><span class="score">0.5/0.5</span></div>
+          <div class="rrow"><span><span class="bad">✗</span>Root x = 3 — wrote x = −3</span><span class="score">0.0/0.5</span></div>
+        </div>
+        <div class="demo-gif-slot has-media" data-gif="live-demo-step-3"><img class="gs-static" src="assets/marked-result-with-rubric-breakdown.png" alt="Marked result with rubric breakdown"><img class="gs-gif" src="assets/marking-annotation-appearing-animated.gif" alt="Marking annotation appearing, animated"></div>
+      </div>
+
+    </div>
+    <div class="demo-dots">
+      <span class="active" data-dot="0"></span><span data-dot="1"></span><span data-dot="2"></span>
+    </div>
+  </div>
+</header>
+
+
+<section id="exam-paradigm">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">Iyal's examination paradigm</div>
+      <h2>Steps in an example examination.</h2>
+      <p class="sub">From picking up the pen to the teacher reviewing AI-marked responses — what Iyal looks like across a real exam session.</p>
+    </div>
+
+    <div class="how-layout">
+      <div class="how-steps" id="howSteps">
+        <div class="how-step active" data-step="0">
+          <div class="stitle"><span class="sidx">1</span>Student uses Iyal Pen during an assessment</div>
+          <p>Students are assigned a unique pen for a given assessment. The pen is switched on before the assignment is taken. Students write the assessment like always — ink writing on a paper surface.</p>
+          <div style="display:none;" class="mob-step-img"><img src="assets/pen-switched-on.jpg" style="width:100%;height:auto;display:block;border-radius:8px;margin-top:16px;"></div></div></div>
+        <div class="how-step" data-step="1">
+          <div class="stitle"><span class="sidx">2</span>Pens are collected at the end of the assessment</div>
+          <p>Each pen has a barcode for unique student identification. Students are free to take their written response home.</p>
+          <div style="display:none;" class="mob-step-img"><img src="assets/pens-collected.jpg" style="width:100%;height:auto;display:block;border-radius:8px;margin-top:16px;"></div></div>
+        <div class="how-step" data-step="2">
+          <div class="stitle"><span class="sidx">3</span>Pen data uploaded onto teacher's computer</div>
+          <p>Teachers see the response of each student, and the mark awarded by the AI — with full information on student strokes, to identify where they struggled and where they did well.</p>
+        
+          <div style="display:none;" class="mob-step-img"><img src="assets/pen-data-uploaded.jpg" style="width:100%;height:auto;display:block;border-radius:8px;margin-top:16px;"></div></div>
+      </div>
+
+      <div class="how-visual" id="howVisual">
+        <div class="hv-frame active" data-frame="0">
+          <div class="hv-gif-slot has-media" data-gif="exam-step-1"><img class="gs-static" src="assets/pen-switched-on.jpg" alt="Iyal pen switched on, ready to write"><img class="gs-gif" src="assets/pen-switching-on-animated.gif" alt="Pen switching on, animated"></div>
+          <h4>Pen on, writing begins</h4>
+          <p>A unique pen, switched on before the assessment starts — writing feels exactly the same as always.</p>
+        </div>
+        <div class="hv-frame" data-frame="1">
+          <div class="hv-gif-slot has-media" data-gif="exam-step-2"><img class="gs-static" src="assets/pens-collected.jpg" alt="Teacher collecting pens after the assessment"><img class="gs-gif" src="assets/pens-being-collected-animated.gif" alt="Pens being collected, animated"></div>
+          <h4>Pens collected, paper kept</h4>
+          <p>Each pen is barcoded to a student. The written response itself stays with the student.</p>
+        </div>
+        <div class="hv-frame" data-frame="2">
+          <div class="hv-gif-slot has-media" data-gif="exam-step-3"><img class="gs-static" src="assets/pen-data-uploaded.jpg" alt="Pen data being uploaded onto a computer"><img class="gs-gif" src="assets/pen-data-uploading-animated.gif" alt="Pen data uploading, animated"></div>
+          <h4>Uploaded, marked, reviewed</h4>
+          <p>Teachers see each response and the AI's mark — down to the exact stroke where a student struggled.</p>
+        </div>
+      </div>
+    </div>
+  
+</section>
+
+<section class="thesis-section">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="thesis-eyebrow">IYAL'S THESIS</div>
+      <h2 class="thesis-title">Become the educational institution of the future via Intelligent Natural Writing assessment delivery and capture.</h2>
+    </div>
+
+    <div class="thesis-diagram reveal" id="thesisDiagram">
+      <svg class="thesis-lines-svg" id="thesisLinesSvg"></svg>
+
+      <div class="thesis-hub" id="thesisHub">
+        <svg viewBox="0 0 100 100">
+          <polygon points="50,4 92,27 92,73 50,96 8,73 8,27"></polygon>
+          <polygon points="50,30 73,43 73,68 50,81 27,68 27,43"></polygon>
+          <line x1="50" y1="4" x2="50" y2="96"></line>
+          <line x1="8" y1="27" x2="92" y2="73"></line>
+          <line x1="92" y1="27" x2="8" y2="73"></line>
+        </svg>
+        <div class="thesis-hub-label">Iyal Capabilities</div>
+      </div>
+
+      <div class="thesis-node-grid">
+        <div class="thesis-node tl" data-anchor="tl">
+          <div class="thesis-img-slot" id="img-stem"><img class="ti-static" src="assets/written-stem-problem-set-real-student-wo.jpg" alt="Written STEM problem set, real student working"></div>
+          <div class="thesis-text">
+            <div class="thesis-tag">Segment 01</div>
+            <h4>Written STEM</h4>
+            <div class="thesis-pills">
+              <span class="thesis-pill">Math notation</span>
+              <span class="thesis-pill">Greek symbols</span>
+              <span class="thesis-pill">Natural language sentences</span>
+              <span class="thesis-pill">Logical reasoning</span>
+              <span class="thesis-pill">Graphical plots</span>
+              <span class="thesis-pill">Object diagrams</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="thesis-node tr" data-anchor="tr">
+          <div class="thesis-img-slot" id="img-essay"><img class="ti-static" src="assets/handwritten-hass-essay-response.jpg" alt="Handwritten HASS essay response"></div>
+          <div class="thesis-text">
+            <div class="thesis-tag">Segment 02</div>
+            <h4>Essay-based examinations (HASS)</h4>
+            <div class="thesis-pills">
+              <span class="thesis-pill">Natural language sentences</span>
+              <span class="thesis-pill">Creative reasoning</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="thesis-node bl" data-anchor="bl">
+          <div class="thesis-img-slot" id="img-lab"><img class="ti-static" src="assets/lab-report-table-and-plotted-graphs.jpg" alt="Lab report table and plotted graphs"></div>
+          <div class="thesis-text">
+            <div class="thesis-tag">Segment 03</div>
+            <h4>Laboratory reports</h4>
+            <div class="thesis-pills">
+              <span class="thesis-pill">Graphical plots</span>
+              <span class="thesis-pill">Object diagrams</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="thesis-node br" data-anchor="br">
+          <div class="thesis-img-slot" id="img-partial"><img class="ti-static" src="assets/short-single-line-physics-answer.jpg" alt="Short single-line physics answer"></div>
+          <div class="thesis-text">
+            <div class="thesis-tag">Segment 04</div>
+            <h4>Partial responses</h4>
+            <div class="thesis-pills">
+              <span class="thesis-pill">Single response answers</span>
+              <span class="thesis-pill">Natural language sentences</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kuri" class="kuri-section">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center; max-width:760px; margin:0 auto;">
+      <div class="kuri-beta"><span class="dot-live"></span>Beta version ready</div>
+      <div class="eyebrow">Iyal Kuri</div>
+      <h2>Technical document generation from natural handwriting.</h2>
+      <p class="sub" style="margin:0 auto; text-align:center;">Our in-built Stroke Intelligence converts hand-written strokes to technical typesetting language (LaTeX) — allowing for the rendering of equations, figures, diagrams, circuits, and more.</p>
+    </div>
+
+    <div class="kuri-demo-card reveal">
+      <div class="kuri-demo-top">
+        <div class="kuri-demo-tab"><span></span><span></span><span></span></div>
+        <div class="kuri-nav-arrows">
+          <div class="kuri-arrow" id="kuriPrev">&#8592;</div>
+          <div class="kuri-arrow" id="kuriNext">&#8594;</div>
+        </div>
+      </div>
+
+      <div class="kuri-slide active" data-kslide="0">
+        <div class="kuri-slide-title">Circuits</div>
+        <div class="kuri-gif-wrap"><img src="assets/kuri-circuit-diagram-sketch-to-rendered-.gif" alt="Kuri: circuit diagram sketch to rendered LaTeX"></div>
+      </div>
+
+      <div class="kuri-slide" data-kslide="1">
+        <div class="kuri-slide-title">Mechanics</div>
+        <div class="kuri-gif-wrap"><img src="assets/kuri-mechanics-sketch-to-rendered-latex.gif" alt="Kuri: mechanics sketch to rendered LaTeX"></div>
+      </div>
+
+      <div class="kuri-slide" data-kslide="2">
+        <div class="kuri-slide-title">Equations</div>
+        <div class="kuri-gif-wrap"><img src="assets/kuri-handwritten-equation-to-rendered-la.gif" alt="Kuri: handwritten equation to rendered LaTeX"></div>
+      </div>
+
+      <div class="kuri-dots">
+        <span class="active" data-kdot="0"></span>
+        <span data-kdot="1"></span>
+        <span data-kdot="2"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="use-cases" style="background:#FBFBFB; border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="reveal center" style="max-width:640px;">
+      <div class="eyebrow">Where it fits</div>
+      <h2 class="center">Anywhere a pen meets paper, and a human being expresses their intellect.</h2>
+    </div>
+    <div class="use-grid">
+      <div class="use-card stagger-child"><div class="use-icon">U</div><h3>Universities</h3><p>Lab reports, problem sets, and end-semester exams across Physics, Mathematics, and Engineering — at full exam scale.</p></div>
+      <div class="use-card stagger-child"><div class="use-icon">S</div><h3>Primary &amp; secondary education</h3><p>CBSE, ICSE, and IB schools, plus competitive exam coaching for JEE, NEET, and GATE — same-day feedback on daily assignments and mock tests.</p></div>
+      <div class="use-card stagger-child"><div class="use-icon">T</div><h3>Remote tuition</h3><p>Live capture of a student writing mid-session — the tutor sees the working as it happens, not a photo of it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="wrap cta-inner reveal">
+    <div class="eyebrow">Get in touch</div>
+    <h2>Build educational paradigms of the future with us.</h2>
+    <p class="sub">We are currently running pilots on the IIT Madras campus, and onboarding our first institutional and tutoring partners.</p>
+
+    <div class="contact-row">
+      <a class="btn-light" href="mailto:ph22d800@smail.iitm.ac.in">Email us →</a>
+      <a class="btn-outline" href="https://www.linkedin.com/in/arvin-s-182aa93a1/" target="_blank">Connect on LinkedIn</a>
+    </div>
+
+    <div class="addr-block">
+      <div class="addr-item">
+        <div class="addr-label">Visit</div>
+        <div class="addr-text">Nirmaan Pre-Incubation Hub<br>IIT Madras Research Park<br>Taramani, Chennai 600113</div>
+      </div>
+      <div class="addr-item">
+        <div class="addr-label">Watch</div>
+        <div class="addr-text"><a href="https://www.youtube.com/watch?v=MrDMNqjp7Dk" target="_blank" style="text-decoration:underline;">Product demo, 2 minutes →</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Iyal · Nirmaan Pre-Incubation Cohort, IIT Madras</span>
+    <span>Intelligent Natural Writing Technology</span>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('in'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  document.querySelectorAll('.use-grid').forEach(group => {
+    const children = group.querySelectorAll('.stagger-child');
+    const go = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          children.forEach((c,i) => setTimeout(() => c.classList.add('in'), i*100));
+          go.disconnect();
+        }
+      });
+    }, { threshold: 0.15 });
+    go.observe(group);
+  });
+
+  (function() {
+    const slides = document.querySelectorAll('.demo-slide');
+    const dots = document.querySelectorAll('.demo-dots span');
+    let i = 0;
+    function show(n) {
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active'));
+      slides[n].classList.add('active');
+      dots[n].classList.add('active');
+      i = n;
+    }
+    setInterval(() => show((i+1) % slides.length), 2800);
+    dots.forEach((d,n) => d.addEventListener('click', () => show(n)));
+  })();
+
+  (function() {
+    const steps = document.querySelectorAll('.how-step');
+    const frames = document.querySelectorAll('.hv-frame');
+    function activate(n) {
+      steps.forEach(s => s.classList.remove('active'));
+      frames.forEach(f => f.classList.remove('active'));
+      steps[n].classList.add('active');
+      frames[n].classList.add('active');
+    }
+    const stepObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const idx = parseInt(entry.target.dataset.step);
+          activate(idx);
+        }
+      });
+    }, { threshold: 0.5, rootMargin: '-30% 0px -30% 0px' });
+    steps.forEach(s => stepObserver.observe(s));
+  })();
+  (function() {
+    const diagram = document.getElementById('thesisDiagram');
+    const hub = document.getElementById('thesisHub');
+    const svg = document.getElementById('thesisLinesSvg');
+    if (!diagram || !hub || !svg) return;
+
+    function pointOnRectNearest(rect, targetX, targetY, containerRect) {
+      // Find the corner of rect nearest to (targetX, targetY), in container-relative coords
+      const corners = [
+        { x: rect.left - containerRect.left, y: rect.top - containerRect.top },
+        { x: rect.right - containerRect.left, y: rect.top - containerRect.top },
+        { x: rect.left - containerRect.left, y: rect.bottom - containerRect.top },
+        { x: rect.right - containerRect.left, y: rect.bottom - containerRect.top }
+      ];
+      let best = corners[0], bestDist = Infinity;
+      corners.forEach(c => {
+        const d = Math.hypot(c.x - targetX, c.y - targetY);
+        if (d < bestDist) { bestDist = d; best = c; }
+      });
+      return best;
+    }
+
+    function draw() {
+      if (window.innerWidth <= 680) { svg.innerHTML = ''; return; }
+      const containerRect = diagram.getBoundingClientRect();
+      svg.setAttribute('width', containerRect.width);
+      svg.setAttribute('height', containerRect.height);
+      svg.setAttribute('viewBox', `0 0 ${containerRect.width} ${containerRect.height}`);
+
+      const hubRect = hub.getBoundingClientRect();
+      const hubX = hubRect.left - containerRect.left + hubRect.width / 2;
+      const hubY = hubRect.top - containerRect.top + hubRect.height / 2;
+
+      const slots = diagram.querySelectorAll('.thesis-img-slot');
+      let html = '';
+      slots.forEach(slot => {
+        const r = slot.getBoundingClientRect();
+        const pt = pointOnRectNearest(r, hubX, hubY, containerRect);
+        html += `<line class="drawn" x1="${hubX}" y1="${hubY}" x2="${pt.x}" y2="${pt.y}"></line>`;
+      });
+      svg.innerHTML = html;
+    }
+
+    window.addEventListener('load', draw);
+    window.addEventListener('resize', draw);
+    setTimeout(draw, 50);
+    // Redraw once fonts/layout settle and when the section scrolls into view
+    const thesisObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) draw(); });
+    }, { threshold: 0.2 });
+    thesisObserver.observe(diagram);
+  })();
+  // ── Kuri demo slides (manual navigation, no auto-scroll) ─────────
+  (function() {
+    const slides = document.querySelectorAll('.kuri-slide');
+    const dots   = document.querySelectorAll('.kuri-dots span');
+    const prev   = document.getElementById('kuriPrev');
+    const next   = document.getElementById('kuriNext');
+    if (!slides.length) return;
+    let cur = 0;
+
+    function goTo(n) {
+      slides[cur].classList.remove('active');
+      dots[cur].classList.remove('active');
+      cur = (n + slides.length) % slides.length;
+      slides[cur].classList.add('active');
+      dots[cur].classList.add('active');
+    }
+
+    if (prev) prev.addEventListener('click', () => goTo(cur - 1));
+    if (next) next.addEventListener('click', () => goTo(cur + 1));
+    dots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.kdot)));
+  })();
+  </script>
+
+</body>
+</html>
